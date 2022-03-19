@@ -27,4 +27,4 @@ Route::get('/post/{post}', 'PostController@show')->name('post.show');
 Route::get('hashtag/{id}', 'HashtagController@index')->name('hash.show');
 Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/home', 'PostController@index')->name('post.index');

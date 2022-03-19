@@ -31,7 +31,7 @@ class PostController extends Controller
         $userTotalNoLikes = $current_user->likesCount();
         $userTotalNocomments = $current_user->commentsCount();
            //isLikedByloggedUser
-        $posts=Post::with(['User','Comments','Hashtags'])->get();
+        $posts=Post::with(['User','Comments','Hashtags'])->orderBy('created_at','desc')->get();
 
 //'CASE WHEN post.user_id = {$current_user->id} THEN 1 ELSE 0 END) AS is_liked'
 
