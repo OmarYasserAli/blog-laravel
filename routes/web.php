@@ -19,6 +19,8 @@ Route::get('/', 'PostController@index')->name('post.index');
 Route::post('/post/store', 'PostController@store')->name('post.store');
 Route::post('/post/comment', 'PostController@comment')->name('post.comment');
 Route::delete('/post/delete', 'PostController@delete')->name('post.delete');
+Route::post('/post/like', 'PostController@likePostToggle')->name('post.like');
+Route::post('/post/likedcheck', 'PostController@islikedByUser')->name('post.likedcheck');
 Route::get('/post/{post}', 'PostController@show')->name('post.show');
 
 

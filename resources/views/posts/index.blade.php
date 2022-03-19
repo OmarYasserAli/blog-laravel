@@ -130,7 +130,7 @@
                                 <div class="tab-pane fade" id="images" role="tabpanel" aria-labelledby="images-tab">
                                     <div class="form-group">
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="customFile">
+                                            <input type="file" class="custom-file-input" id="customFile" >
                                             <label class="custom-file-label" for="customFile">Upload image</label>
                                         </div>
                                     </div>
@@ -160,7 +160,7 @@
                 <!-- Post /////-->
                 @foreach($posts as $post)
                 <!--- \\\\\\\Post-->
-                <div class="card gedf-card">
+                <div class="card gedf-card  postDiv">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex justify-content-between align-items-center">
@@ -179,7 +179,9 @@
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="gedf-drop1">
                                         <div class="h6 dropdown-header">Configuration</div>
-                                        <a class="dropdown-item delete-btn" href="#" data-postId='{{$post->id}}'>Delete</a>
+                                        @if(Auth::id()== $post->user_id)
+                                        <a class="dropdown-item delete-btn" href="" data-postId='{{$post->id}}'>Delete</a>
+                                        @endif
                                         <a class="dropdown-item" href="#">Hide</a>
                                         <a class="dropdown-item" href="#">Report</a>
                                     </div>
@@ -207,7 +209,8 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <a href="#" class="card-link"><i class="fa fa-gittip"></i> Like</a>
+                        <a href="#" class="like-btn card-link" data-PostId='{{$post->id}}'>
+                            <i class="fa fa-gittip" ></i> Like</a>
                         <a href="#" class="card-link"><i class="fa fa-comment"></i> Comment</a>
                         <a href="#" class="card-link"><i class="fa fa-mail-forward"></i> Share</a>
                     </div>
@@ -225,7 +228,12 @@
                      <ul class="list-group list-group-flush">
                         @foreach($post->comments as $comment)
                         <li class="list-group-item">
+                            
+                            <div class="h5">@ {{$comment->User->email}}</div>
+                               
                             <div class="h5">{{$comment->comment}}</div>
+    
+                           
                         </li>
                             
                         @endforeach
@@ -246,11 +254,59 @@
     </div>
 
 <script type="text/javascript">
+        $( document ).ready(function() {
+
+
+            $(".like-btn").each(function() {
+
+                var btn = $(this);
+                var formData = {postId:btn.attr('data-postId'),  "_token": "{{ csrf_token() }}"}; 
+                var icon=btn.find("i");
+                var liked = 0;
+                
+                $.ajax({
+                    type: "POST",
+                    url: "{{route('post.likedcheck')}}",
+                    data: formData,
+                    success: function(data) {
+                        if(data.liked)
+                         icon.css("color", "red");
+                    }
+                });
+            })
+                
+
+           
+           
+        });
+
+        $(".like-btn").click(function(event) {
+            
+            event.preventDefault();
+            var el =$(this);
+            var postId = $(this).attr('data-postId');
+            var formData = {postId:postId,  "_token": "{{ csrf_token() }}"}; 
+            var icon=el.find("i");
+            $.ajax({
+                url : "{{route('post.like')}}",
+                type: "post",
+                data : formData,
+                success: function(data, textStatus, jqXHR)
+                {
+                    if(data.liked)
+                        icon.css("color", "red");
+                    else
+                        icon.css("color", "");
+                },
+                error: function (jqXHR, textStatus, errorThrown)
+                {
+                    return;
+                }
+            });
+     
+      });
 
      $( ".comment_btn" ).click(function() {
-
-        
-      
        var textArea =$(this).parent().parent().find("textarea");
        var comment = textArea.val(); 
        var postId = (textArea[0]).dataset.postid;
@@ -273,16 +329,18 @@
                 return;
             }
         });
-        $(this).parent().parent().parent().find("ul").append('<li class="list-group-item"><div class="h5">'+comment+'</div></li>');
+        $(this).parent().parent().parent().find("ul").append('<li class="list-group-item"><div class="h5">'+"@ {{Auth::user()->email}}"+'</div><div class="h5">'+comment+'</div></li>');
       });
     $( "#post_share " ).click(function() {
         //$(this).attr('disabled', 'disabled');
         var input_title = $("#title").val()
         var input_description = $("#description").val()
         var input_tags = $("#tags").val()
+        
 
         if(input_title == "" || input_description=="") {return;}
-        var formData = {description:input_description,title:input_title,tags:input_tags,  "_token": "{{ csrf_token() }}",}; 
+        var formData = {description:input_description,
+            title:input_title,tags:input_tags,  "_token": "{{ csrf_token() }}",}; 
         
         $.ajax({
             url : "{{route('post.store')}}",
@@ -297,18 +355,15 @@
             {
          
             }
-        });
-        
-        
-});
+        });  
+    });
 
 
 
-     $( ".delete-btn" ).click(function() {
-
-       var postId = $(this).attr('data-postId')
-       
-        
+     $( ".delete-btn" ).click(function(event) {
+        event.preventDefault();
+        var el =$(this);
+        var postId = $(this).attr('data-postId')
         var formData = {postId:postId,  "_token": "{{ csrf_token() }}",}; 
         
         $.ajax({
@@ -317,17 +372,15 @@
             data : formData,
             success: function(data, textStatus, jqXHR)
             {
-
-               
-                
+                el.closest('.postDiv').remove();
             },
             error: function (jqXHR, textStatus, errorThrown)
             {
                 return;
             }
         });
-     
-      });
+        
+    });
     
 
 </script>

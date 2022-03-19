@@ -8,6 +8,7 @@ use App\Hashtag;
 
 
 use Auth;
+//use Image;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -24,6 +25,7 @@ class PostController extends Controller
     }
     public function index()
     {
+
         $current_user=Auth::user();
         $userTotalNumPost =  $current_user->postsCount();
         $userTotalNoLikes = $current_user->likesCount();
@@ -69,11 +71,12 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+
         $validated = $request->validate([
          'title' => 'required',
          'description' =>  'required',
         ]);
-// dd($request->all());
+
         $post= new Post();
         $post->title = $request->title;
         $post->description = $request->description;
@@ -124,6 +127,36 @@ class PostController extends Controller
      * @param  \App\Post  $post
      * @return \Illuminate\Http\Response
      */
+
+    public function likePostToggle(Request $request)
+    {
+         $post=Post::findOrFail($request->postId);
+
+         $user= [];
+         $liked=0;
+         if(!$post->likes()->where('user_id', Auth::id())->exists()){
+            array_push($user, Auth::id());
+            $liked=1;
+         }
+           
+         $post->likes()->sync($user);
+
+         return response()->json(['liked'=>$liked],200);
+
+
+    }
+
+    public function islikedByUser(Request $request)
+    {
+        $post=Post::findOrFail($request->postId);
+
+        $liked=0 ;
+        if($post->likes()->where('user_id', Auth::id())->exists())
+            $liked=1;
+        
+
+        return response()->json(['liked'=>$liked],200);
+    }
     public function update(Request $request, Post $post)
     {
         //
@@ -140,11 +173,15 @@ class PostController extends Controller
        
 
 
-        $post=Post::find($request->postId);
+        $post=Post::findOrFail($request->postId);
         if($post->user_id == Auth::id()){
             foreach ($post->comments as $key => $comment) {
                 $comment->delete();
             }
+            foreach ($post->Hashtags as $key => $Hashtag) {
+                $Hashtag->delete();
+            }
+            $post->likes()->wherePivot('post_id','=',$request->postId)->detach();
             $post->delete();
             return response()->json([],200);     
         }

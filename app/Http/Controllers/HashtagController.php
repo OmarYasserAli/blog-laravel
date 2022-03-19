@@ -17,7 +17,7 @@ class HashtagController extends Controller
     public function index(int $id)
     {
         
-        $tag= Hashtag::find($id);
+        $tag= Hashtag::findOrFail($id);
         $alltags = Hashtag::where('tag',$tag->tag)->get('post_id')->pluck('post_id')->toArray();
         //dd(array_values($alltags));
          $current_user=Auth::user();
